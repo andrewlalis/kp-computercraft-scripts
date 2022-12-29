@@ -84,10 +84,11 @@ local function getPeripheralOrWait(name)
     repeat
         p = peripheral.find(name)
         if p == nil then
-            showError("Error: Couldn't find an attached peripheral with name \"" .. name .. "\"")
+            showError("Error: Couldn't find an attached peripheral with name \"" .. name .. "\". Please attach one.")
             os.pullEvent("peripheral")
             if p ~= nil then
-                showMessage("Peripheral \"" .. name .. "\" connected.")
+                showMessage("Peripheral \"" .. name .. "\" connected. Resuming operations shortly.")
+                os.sleep(3)
             end
         end
     until p ~= nil
@@ -101,7 +102,10 @@ local function meSystemConnected(meBridge)
     return craftingCpus ~= nil and #craftingCpus > 0
 end
 
+
+
 drawScreen(false)
+local lastOnlineStatus = false
 
 while true do
     local modem = getPeripheralOrWait("modem")
@@ -113,5 +117,11 @@ while true do
     }
     modem.transmit(SEND_CHANNEL, RECEIVE_CHANNEL, packet)
     drawScreen(packet.online)
-    os.sleep(TRANSMIT_INTERVAL)
+    if lastOnlineStatus == true and packet.online == false then
+        showError("The quantum link just went offline.")
+        os.sleep(3)
+    else
+        os.sleep(TRANSMIT_INTERVAL)
+    end
+    lastOnlineStatus = packet.online
 end

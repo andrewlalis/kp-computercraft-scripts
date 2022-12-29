@@ -54,27 +54,29 @@ end
 
 local function clearMessageLine()
     local _, h = term.getSize()
-    term.setCursorPos(1, h - 1)
     term.setBackgroundColor(colors.gray)
-    term.clearLine()
+    for i = 0, 3 do
+        term.setCursorPos(1, h - i)
+        term.clearLine()
+    end
 end
 
 local function showError(msg)
     clearMessageLine()
     local _, h = term.getSize()
-    term.setCursorPos(2, h - 1)
+    term.setCursorPos(1, h - 2)
     term.setBackgroundColor(colors.gray)
     term.setTextColor(colors.red)
-    term.write(msg)
+    write(msg)
 end
 
 local function showMessage(msg)
     clearMessageLine()
     local _, h = term.getSize()
-    term.setCursorPos(2, h - 1)
+    term.setCursorPos(1, h - 2)
     term.setBackgroundColor(colors.gray)
     term.setTextColor(colors.lightBlue)
-    term.write(msg)
+    write(msg)
 end
 
 local function getPeripheralOrWait(name)

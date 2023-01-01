@@ -5,41 +5,12 @@ A script for an all-in-one elevator with floor selection, sounds, doors, and
 more.
 ]]
 
-local SYSTEM_NAME = "Test Elevator"
-
--- Floors, in order from bottom to top.
-local FLOORS = {
-    {
-        label = "-1",
-        name = "Basement",
-        speaker = "speaker_2",
-        doorRedstone = "redstoneIntegrator_17",
-        contactRedstone = "redstoneIntegrator_18",
-        monitor = "monitor_4",
-        callMonitor = "monitor_5",
-        height = 25
-    },
-    {
-        label = "0",
-        name = "Ground Floor",
-        speaker = "speaker_1",
-        doorRedstone = "redstoneIntegrator_7",
-        contactRedstone = "redstoneIntegrator_6",
-        monitor = "monitor_1",
-        callMonitor = "monitor_3",
-        height = 58
-    },
-    {
-        label = "1",
-        name = "Mechanical Room",
-        speaker = "speaker_0",
-        doorRedstone = "redstoneIntegrator_4",
-        contactRedstone = "redstoneIntegrator_5",
-        monitor = "monitor_0",
-        callMonitor = "monitor_2",
-        height = 68
-    }
-}
+-- Load floors from elevator settings.
+local FLOORS = {}
+local floorsFile = io.open("floors.tbl", "r") or error("Missing floors.tbl")
+FLOORS = textutils.unserialize(floorsFile:read("a"))
+floorsFile:close()
+table.sort(FLOORS, function(fA, fB) return fA.height < fB.height end)
 
 local FLOORS_BY_LABEL = {}
 for _, floor in pairs(FLOORS) do
@@ -52,13 +23,18 @@ for _, floor in pairs(FLOORS) do
 end
 table.sort(FLOOR_LABELS_ORDERED, function(lblA, lblB) return FLOORS_BY_LABEL[lblA].height < FLOORS_BY_LABEL[lblB].height end)
 
-local CONTROL_BASE_RPM = 16
-local CONTROL_MAX_RPM = 256
-local CONTROL_ANALOG_LEVEL_PER_RPM = 2
+local settingsFile = io.open("settings.tbl", "r") or error("Missing settings.tbl")
+local settings = textutils.unserialize(settingsFile:read("a"))
 
-local CONTROL_DIRECTION_UP = true
-local CONTROL_DIRECTION_DOWN = false
-local CONTROL_REDSTONE = "redstoneIntegrator_13"
+local SYSTEM_NAME = settings.systemName
+
+local CONTROL_BASE_RPM = settings.control.baseRpm
+local CONTROL_MAX_RPM = settings.control.maxRpm
+local CONTROL_ANALOG_LEVEL_PER_RPM = settings.control.analogLevelPerRpm
+
+local CONTROL_DIRECTION_UP = settings.control.directionUp
+local CONTROL_DIRECTION_DOWN = settings.control.directionDown
+local CONTROL_REDSTONE = settings.control.redstone
 
 local CURRENT_STATE = {
     rpm = nil,
@@ -66,11 +42,11 @@ local CURRENT_STATE = {
 }
 
 local function openDoor(floor)
-    peripheral.call(floor.doorRedstone, "setOutput", "back", true)
+    peripheral.call(floor.redstone, "setOutput", "left", true)
 end
 
 local function closeDoor(floor)
-    peripheral.call(floor.doorRedstone, "setOutput", "back", false)
+    peripheral.call(floor.redstone, "setOutput", "left", false)
 end
 
 local function playChime(floor)
@@ -133,7 +109,7 @@ local function setSpeed(rpm)
 end
 
 local function isFloorContactActive(floor)
-    return peripheral.call(floor.contactRedstone, "getInput", "back")
+    return peripheral.call(floor.redstone, "getInput", "back")
 end
 
 -- Determines the label of the floor we're currently on.
@@ -141,7 +117,7 @@ end
 -- If that fails, the elevator is at an unknown position, so we move it as soon as possible to top.
 local function determineCurrentFloorLabel()
     for _, floor in pairs(FLOORS) do
-        local status = peripheral.call(floor.contactRedstone, "getInput", "back")
+        local status = isFloorContactActive(floor)
         if status then return floor.label end
     end
     -- No floor found. Move the elevator to the top.

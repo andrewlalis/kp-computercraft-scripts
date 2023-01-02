@@ -3,7 +3,11 @@
 
 A script for an all-in-one elevator with floor selection, sounds, doors, and
 more.
+
+Requires `pcm-reader.lua` installed as to be required with `require("pcm")`
 ]]
+
+local pcm = require("pcm")
 
 -- Load floors from elevator settings.
 local FLOORS = {}
@@ -200,6 +204,8 @@ local function goToFloor(floorLabel)
     local motionKeyframes = computeLinearMotion(distance)
     playChime(currentFloor)
     closeDoor(currentFloor)
+    local audioFile = "audio/going-up.pcm"
+    if rpmDir == -1 then audioFile = "audio/going-down.pcm" end
     for _, frame in pairs(motionKeyframes) do
         local sleepTime = math.floor((frame.duration - 0.05) * 20) / 20 -- Make sure we round down to safely arrive before the detector.
         if frame.rpm == CONTROL_MAX_RPM then
@@ -365,8 +371,6 @@ end
 --[[
     Main Script Area.
 ]]
-
-
 
 initControls()
 initUserInterface()

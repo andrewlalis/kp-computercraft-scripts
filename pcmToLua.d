@@ -7,6 +7,7 @@ module pcm_to_lua;
 
 import std.stdio;
 import std.file;
+import std.array;
 
 const frameSize = 128 * 1024;
 
@@ -23,6 +24,7 @@ int main(string[] args) {
 
     byte[] contents = cast(byte[]) std.file.read(audioFilename);
     ulong sampleIndex = 0;
+    auto app = appender!string;
     stdout.writeln("local audio = {");
     foreach (byte sample; contents) {
         stdout.writefln!"    %d,"(sample);

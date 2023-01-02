@@ -1,11 +1,14 @@
 #!/usr/bin/env rdmd
 /**
- * Converts a signed 8-bit PCM audio file into a Lua table list.
+ * Converts a signed 8-bit PCM audio file into a Lua table list. Run this from
+ * the command-line via `./pcmToLua my-pcm-file.pcm`.
  */
 module pcm_to_lua;
 
 import std.stdio;
 import std.file;
+
+const frameSize = 128 * 1024;
 
 int main(string[] args) {
     if (args.length < 2) {
@@ -19,9 +22,11 @@ int main(string[] args) {
     }
 
     byte[] contents = cast(byte[]) std.file.read(audioFilename);
+    ulong sampleIndex = 0;
     stdout.writeln("local audio = {");
     foreach (byte sample; contents) {
         stdout.writefln!"    %d,"(sample);
+        sampleIndex++;
     }
     stdout.writeln("}");
 

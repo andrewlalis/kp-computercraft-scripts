@@ -202,10 +202,12 @@ local function goToFloor(floorLabel)
 
     local distance = math.abs(targetFloor.height - currentFloor.height) - 1
     local motionKeyframes = computeLinearMotion(distance)
-    playChime(currentFloor)
+    --playChime(currentFloor)
     closeDoor(currentFloor)
     local audioFile = "audio/going-up.pcm"
     if rpmDir == -1 then audioFile = "audio/going-down.pcm" end
+    local speaker = peripheral.wrap(currentFloor.speaker)
+    pcm.playFile(speaker, audioFile)
     for _, frame in pairs(motionKeyframes) do
         local sleepTime = math.floor((frame.duration - 0.05) * 20) / 20 -- Make sure we round down to safely arrive before the detector.
         if frame.rpm == CONTROL_MAX_RPM then
